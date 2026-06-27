@@ -18,4 +18,17 @@ Content-Type: application/json
     "releaseDate" : "2020-12-24"
 }
 
+###
+PUT  http://localhost:5118/games/1
+Content-Type: application/json
+
+{
+   "name" : "God of war",
+   "genre" : "Sports",
+    "price" : 4.99,
+    "releaseDate" : "2020-12-24"
+}
+###
+DELETE  http://localhost:5118/games/1
+
 

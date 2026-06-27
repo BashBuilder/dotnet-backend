@@ -32,11 +32,17 @@ List<GameDto> games = [
 app.MapGet("health", () => "Server is healthy");
 
 app.MapGet("games", () => games);
-app.MapGet("games/{id}", (int id) => games.Find(game => game.Id == id)).WithName(GetGameEndpointName);
+app.MapGet("games/{id}", (int id) =>
+{
+  GameDto? game = games.Find(game => game.Id == id);
+
+  return game is null ? Results.NotFound() : Results.Ok(game);
+
+}).WithName(GetGameEndpointName);
+
 
 app.MapPost("games", (CreateGameDto newGame) =>
 {
-  Console.WriteLine(newGame);
   GameDto game = new(
     games.Count + 1,
     newGame.Name,
@@ -44,12 +50,35 @@ app.MapPost("games", (CreateGameDto newGame) =>
     newGame.Price,
     newGame.ReleaseDate
   );
-
   games.Add(game);
-
   return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, game);
+});
 
+app.MapPut("games/{id}", (int id, UpdateGameDto updatedGame) =>
+{
+  int index = games.FindIndex(game => game.Id == id);
 
+  if (index == -1)
+  {
+    return Results.NotFound();
+  }
+
+  games[index] = new(
+    id,
+    updatedGame.Name,
+    updatedGame.Genre,
+    updatedGame.Price,
+    updatedGame.ReleaseDate
+  );
+
+  return Results.NoContent();
+});
+
+app.MapDelete("games/{id}", (int id) =>
+{
+  games.RemoveAll(game => game.Id == id);
+
+  return Results.NoContent();
 });
 
 app.Run();
