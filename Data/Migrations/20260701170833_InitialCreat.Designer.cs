@@ -11,8 +11,8 @@ using backend.Data;
 namespace backend.Data.Migrations
 {
     [DbContext(typeof(GameStoreContext))]
-    [Migration("20260630075757_InitialCreates")]
-    partial class InitialCreates
+    [Migration("20260701170833_InitialCreat")]
+    partial class InitialCreat
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -59,6 +59,33 @@ namespace backend.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Genres");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Action"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Adventure"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "RPG"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Strategy"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Sports"
+                        });
                 });
 
             modelBuilder.Entity("backend.Entities.Game", b =>
