@@ -11,7 +11,10 @@ builder.Services.AddSqlite<GameStoreContext>(connectionString);
 var app = builder.Build();
 
 app.MapGet("health", () => "Server is healthy");
+
 app.MapGamesEndpoints();
+
+app.MigrateDb();
 
 
 app.Run();
