@@ -14,7 +14,7 @@ app.MapGet("health", () => "Server is healthy");
 
 app.MapGamesEndpoints();
 
-app.MigrateDb();
+await app.MigrateDbAsync();
 
 
 app.Run();

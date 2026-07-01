@@ -2,6 +2,7 @@ using backend.Data;
 using backend.Dtos;
 using backend.Entities;
 using backend.Mapping;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Endpoints
 {
@@ -9,7 +10,7 @@ namespace backend.Endpoints
   {
     const string GetGameEndpointName = "GetGame";
 
-    private readonly static List<GameDto> games = [
+    private readonly static List<GameSummaryDto> games = [
       new(
         1,
         "Street Fighter II",
@@ -38,21 +39,32 @@ namespace backend.Endpoints
       var group = app.MapGroup("games")
                      .WithParameterValidation();
 
+      // get all games
+      group.MapGet("/", async (GameStoreContext dbContext) =>
+        await dbContext
+          .Games.Include(game => game.Genre)
+          .Select(game => game.ToGameSummaryDto())
+          .AsNoTracking()
+          .ToListAsync()
+        );
 
-      group.MapGet("/", () => games);
-      group.MapGet("/{id}", (int id) =>
+
+      // get games by id
+      group.MapGet("/{id}", async (int id, GameStoreContext dbContext) =>
       {
-        GameDto? game = games.Find(game => game.Id == id);
 
-        return game is null ? Results.NotFound() : Results.Ok(game);
+        // GameDto? game = games.Find(game => game.Id == id);
+        Game? game = await dbContext.Games.FindAsync(id);
+
+        return game is null ? Results.NotFound() : Results.Ok(game.ToGameDetailsDto());
 
       }).WithName(GetGameEndpointName);
 
 
-      group.MapPost("/", (CreateGameDto newGame, GameStoreContext dbContext) =>
+      group.MapPost("/", async (CreateGameDto newGame, GameStoreContext dbContext) =>
       {
         Game game = newGame.ToEntity();
-        game.Genre = dbContext.Genres.Find(newGame.GenreId);
+        // game.Genre = dbContext.Genres.Find(newGame.GenreId);
         // Game game = new()
         // {
         //   Name = newGame.Name,
@@ -63,7 +75,7 @@ namespace backend.Endpoints
         // };
 
         dbContext.Games.Add(game);
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
 
         // GameDto gameDto = new(
         //   game.Id,
@@ -73,32 +85,56 @@ namespace backend.Endpoints
         //   game.ReleaseDate
         // );
 
-        return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, game.ToDto());
+        return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, game.ToGameSummaryDto());
       });
 
-      group.MapPut("/{id}", (int id, UpdateGameDto updatedGame) =>
+      // update game by id
+      group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, GameStoreContext dbContext) =>
       {
-        int index = games.FindIndex(game => game.Id == id);
+        // int index = games.FindIndex(game => game.Id == id);
 
-        if (index == -1)
+        // if (index == -1)
+        // {
+        //   return Results.NotFound();
+        // }
+
+        Game? game = await dbContext.Games.FindAsync(id);
+        if (game is null)
         {
           return Results.NotFound();
         }
 
-        games[index] = new(
-          id,
-          updatedGame.Name,
-          updatedGame.Genre,
-          updatedGame.Price,
-          updatedGame.ReleaseDate
-        );
+        // games[index] = new(
+        //   id,
+        //   updatedGame.Name,
+        //   updatedGame.Genre,
+        //   updatedGame.Price,
+        //   updatedGame.ReleaseDate
+        // );
+
+        dbContext.Entry(game)
+          .CurrentValues
+          .SetValues(updatedGame.ToEntity(id));
+
+        await dbContext.SaveChangesAsync();
 
         return Results.NoContent();
       });
 
-      group.MapDelete("/{id}", (int id) =>
+      group.MapDelete("/{id}", async (int id, GameStoreContext dbContext) =>
       {
-        games.RemoveAll(game => game.Id == id);
+        // Game? game = dbContext.Games.Find(id);
+        // if (game is null)
+        // {
+        //   return Results.NotFound();
+        // }
+
+        // dbContext.Games.Remove(game);
+
+        await dbContext.Games
+          .Where(game => game.Id == id)
+          .ExecuteDeleteAsync();
+        // dbContext.SaveChanges();
 
         return Results.NoContent();
       });

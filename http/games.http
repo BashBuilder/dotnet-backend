@@ -12,8 +12,8 @@ POST  http://localhost:5118/games
 Content-Type: application/json
 
 {
-   "name" : "God of war",
-   "genre" : "Sports",
+   "name" : "Fire Emblem",
+   "genreId" : 1,
     "price" : 4.99,
     "releaseDate" : "2020-12-24"
 }
