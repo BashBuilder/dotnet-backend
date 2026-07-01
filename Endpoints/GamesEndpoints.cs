@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.Dtos;
 using backend.Entities;
+using backend.Mapping;
 
 namespace backend.Endpoints
 {
@@ -50,27 +51,29 @@ namespace backend.Endpoints
 
       group.MapPost("/", (CreateGameDto newGame, GameStoreContext dbContext) =>
       {
-        Game game = new()
-        {
-          Name = newGame.Name,
-          Genre = dbContext.Genres.Find(newGame.GenreId),
-          GenreId = newGame.GenreId,
-          Price = newGame.Price,
-          ReleaseDate = newGame.ReleaseDate
-        };
+        Game game = newGame.ToEntity();
+        game.Genre = dbContext.Genres.Find(newGame.GenreId);
+        // Game game = new()
+        // {
+        //   Name = newGame.Name,
+        //   Genre = dbContext.Genres.Find(newGame.GenreId),
+        //   GenreId = newGame.GenreId,
+        //   Price = newGame.Price,
+        //   ReleaseDate = newGame.ReleaseDate
+        // };
 
         dbContext.Games.Add(game);
         dbContext.SaveChanges();
 
-        GameDto gameDto = new(
-          game.Id,
-          game.Name,
-          game.Genre!.Name,
-          game.Price,
-          game.ReleaseDate
-        );
+        // GameDto gameDto = new(
+        //   game.Id,
+        //   game.Name,
+        //   game.Genre!.Name,
+        //   game.Price,
+        //   game.ReleaseDate
+        // );
 
-        return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, gameDto);
+        return Results.CreatedAtRoute(GetGameEndpointName, new { id = game.Id }, game.ToDto());
       });
 
       group.MapPut("/{id}", (int id, UpdateGameDto updatedGame) =>
